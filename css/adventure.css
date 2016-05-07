@@ -1,0 +1,10 @@
+body {
+  background: #efcafa;
+  font-family: sans-serif;
+}
+
+.main-container {
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+}
