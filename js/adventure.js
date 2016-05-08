@@ -1,10 +1,3 @@
-import { setExplanation } from 'domHelpers';
-let adventure = window.adventure = {
-    inventory : [
-        { name : 'Memories', description : 'Your memories. There\'s no use for these' }
-    ],
-    makeExpSayDog () {
-        setExplanation('DOG');
-    }
-
-};
+import { setExplanation } from './helpers/domHelpers';
+import Adventure from './classes/Adventure';
+let adventure = window.adventure = new Adventure();
