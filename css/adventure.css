@@ -1,10 +1,33 @@
 body {
-  background: #efcafa;
-  font-family: sans-serif;
+  background: #200045;
+  font-family: monospace;
+  color: #efcafa;
 }
 
-.main-container {
-  display: flex;
-  flex-direction: column;
-  align-content: center;
+.explanation-container {
+  width: 800px;
+  margin: 0 auto;
+  padding-top: 40px;
+  font-size: 30px;
+  overflow: hidden;
+}
+
+.player-input {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 40px;
+  font-size: 30px;
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+}
+
+.player-input:focus {
+  outline: #efcafa;
+}
+
+.player-input:before {
+  content: ">"
 }
