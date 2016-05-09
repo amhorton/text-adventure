@@ -1,7 +1,7 @@
 body {
-  background: #200045;
+  background: #000;
   font-family: monospace;
-  color: #efcafa;
+  color: #ddd;
 }
 
 .description-container {
@@ -31,7 +31,7 @@ body {
 }
 
 .player-input:focus {
-  outline: #efcafa;
+  outline: none;
 }
 
 .player-input:before {

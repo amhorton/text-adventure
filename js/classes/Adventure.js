@@ -1,12 +1,17 @@
+const keys = require('lodash.keys');
+const extend = require('lodash.assignin');
+
 import { setExplanation, setDescription, getInput } from '../helpers/domHelpers';
+import { locations } from '../content-lists/locations';
 export default class Adventure {
     constructor(options = {}) {
       //set up basic options
-      const { playerName, inventory, worldState, gameState, log } = options;
+      const { playerName, inventory, worldState, gameState, log, location } = options;
       this.playerName = playerName || "Bringer";
       this.inventory = inventory || ['Notebook', 'Watch'];
       this.worldState = worldState || this.getInitialWorldState();
       this.gameState = gameState || this.getInitialGameState();
+      this.locations = locations(this);
 
       //set up other properties
       this.log = log || []; //the player should be able to see a log of everything that has happened so far
@@ -33,7 +38,7 @@ export default class Adventure {
       //basic listeners, so check those with the input first. They'll return
       //false if they can't use the input.
       let matchedUniqueListener = false;
-      this.inputListeners.forEach((listener) => {
+      this.uniqueListeners.forEach((listener) => {
         if (!matchedUniqueListener) {
           const feedback = listener(input);
           if (feedback) {
@@ -41,16 +46,46 @@ export default class Adventure {
           }
         }
       });
+      if (matchedUniqueListener) {
+        return;
+      }
 
       //if we don't match a special listener, go back to basics
 
-      if (!matchedInputListener) {
-        console.log('i did not find a unique listener match');
-        console.log('delegating to basic functions');
+      const split = input.split(' ');
+      const command = split[0];
+      const afterCommand = split.slice(1).join(' ');
 
+      switch (command) {
+        case "inventory":
+          this.showInventory(afterCommand);
+          break;
+        default:
+          console.log('no match bruh');
       }
     }
 
+    //understanding interactables
+    getCheckables() {
+      
+    }
+
+    getUseables() {
+
+    }
+
+    getTalkables() {
+
+    }
+
+    //responses
+
+    showInventory(input) {
+      const inventoryString = this.inventory.join('\n');
+      let output = "Your inventory:" + inventoryString;
+      this.setDescription(inventoryString);
+
+    }
 
     //basic getters
     getName() {
@@ -63,6 +98,10 @@ export default class Adventure {
 
     getWorldState() {
       return this.worldState;
+    }
+
+    getLocations() {
+      return this.locations;
     }
 
     //initialize stuff
