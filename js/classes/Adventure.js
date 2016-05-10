@@ -1,17 +1,22 @@
 const keys = require('lodash.keys');
 const extend = require('lodash.assignin');
+const isFunction = require('lodash.isfunction');
 
 import { setExplanation, setDescription, getInput } from '../helpers/domHelpers';
 import { locations } from '../content-lists/locations';
+import WorldState from './WorldState';
+import GameState from './GameState';
+
 export default class Adventure {
     constructor(options = {}) {
       //set up basic options
-      const { playerName, inventory, worldState, gameState, log, location } = options;
+      const { playerName, inventory, worldState, gameState, description, explanation, log } = options;
       this.playerName = playerName || "Bringer";
       this.inventory = inventory || ['Notebook', 'Watch'];
       this.worldState = worldState || this.getInitialWorldState();
       this.gameState = gameState || this.getInitialGameState();
-      this.locations = locations(this);
+      this.description = description || this.getInitialDescription();
+      this.explanation = explanation || this.getInitialExplanation();
 
       //set up other properties
       this.log = log || []; //the player should be able to see a log of everything that has happened so far
@@ -21,9 +26,9 @@ export default class Adventure {
       //set up event handlers
       getInput().addEventListener('keypress', this.onKeyPress.bind(this));
 
-      //put some basic stuff in the dom
-      this.setDescription(this.gameState.description);
-      this.setExplanation(this.gameState.explanation);
+      //put some basic stuff on the screen
+      this.setDescription(this.description);
+      this.setExplanation(this.explanation);
     }
 
     //parse function: this is where the dumb magic happens
@@ -46,6 +51,7 @@ export default class Adventure {
           }
         }
       });
+
       if (matchedUniqueListener) {
         return;
       }
@@ -60,14 +66,23 @@ export default class Adventure {
         case "inventory":
           this.showInventory(afterCommand);
           break;
+        case "check":
+        case "examine":
+          this.check(afterCommand);
+          break;
         default:
           console.log('no match bruh');
       }
+
+      return this; //maybe we'll want to chain?
     }
 
     //understanding interactables
     getCheckables() {
-      
+      const worldStateCheckables = this.worldState.getCheckables();
+      const gameStateCheckables = this.gameState.getCheckables();
+
+      return new Map([...worldStateCheckables, ...gameStateCheckables]);
     }
 
     getUseables() {
@@ -85,6 +100,20 @@ export default class Adventure {
       let output = "Your inventory:" + inventoryString;
       this.setDescription(inventoryString);
 
+    }
+
+    check(input) {
+      const checkResult = this.getCheckables().get(input);
+      if (!checkResult) {
+        this.setExplanation(`I can't check ${input}!`);
+        return;
+      }
+
+      if (isFunction(checkResult)) {
+        checkResult(adventure);
+      } else {
+        this.setExplanation(checkResult);
+      }
     }
 
     //basic getters
@@ -107,16 +136,29 @@ export default class Adventure {
     //initialize stuff
 
     getInitialWorldState() {
-      return {
-        time: 0
-      }
+      return new WorldState({
+        adventure : this,
+        state : {
+          time : 0
+        }
+      })
     }
 
     getInitialGameState() {
-      return {
-        description: "You are in a bedroom.",
-        explanation: "Suggestions: use \"check\" to look around or \"inventory\" to see what you're carrying."
-      }
+      return new GameState({
+        adventure : this,
+        state : {
+          location : locations(this).get('Bedroom')
+        }
+      })
+    }
+
+    getInitialExplanation() {
+      return "Suggestions: use \"check\" to look around or \"inventory\" to see what you're carrying."
+    }
+
+    getInitialDescription() {
+      return "You are in a bedroom."
     }
 
     //basic setters
