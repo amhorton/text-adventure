@@ -1,8 +1,9 @@
 const keys = require('lodash.keys');
 const extend = require('lodash.assignin');
-const isFunction = require('lodash.isfunction');
+const isFunction = require('lodash.isfunction');90
 
 import { setExplanation, setDescription, getInput } from '../helpers/domHelpers';
+import { makeListener } from '../helpers/makeListener';
 import { locations } from '../content-lists/locations';
 import WorldState from './WorldState';
 import GameState from './GameState';
@@ -11,8 +12,11 @@ export default class Adventure {
     constructor(options = {}) {
       //set up basic options
       const { playerName, inventory, worldState, gameState, description, explanation, log } = options;
+
+      this.locations = locations(this);
+
       this.playerName = playerName || "Bringer";
-      this.inventory = inventory || ['Notebook', 'Watch'];
+      this.inventory = inventory || ['notebook', 'watch'];
       this.worldState = worldState || this.getInitialWorldState();
       this.gameState = gameState || this.getInitialGameState();
       this.description = description || this.getInitialDescription();
@@ -20,7 +24,7 @@ export default class Adventure {
 
       //set up other properties
       this.log = log || []; //the player should be able to see a log of everything that has happened so far
-      this.uniqueListeners = []; //functions looking for special listeners
+      this.uniqueListeners = this.getInitialListeners(); //functions looking for special listeners
 
 
       //set up event handlers
@@ -36,6 +40,8 @@ export default class Adventure {
       if (!input) {
         return; //don't do anything if there's nothing in the box
       }
+
+      input = input.toLowerCase();
 
       this.addToLog(">: " + input); //log everything the player says to us
 
@@ -68,10 +74,17 @@ export default class Adventure {
           break;
         case "check":
         case "examine":
+        case "inspect":
+        case "peruse":
           this.check(afterCommand);
           break;
+        case "take":
+        case "get":
+        case "pocket":
+        case "nab":
+
         default:
-          console.log('no match bruh');
+          this.respondToNonsense();
       }
 
       return this; //maybe we'll want to chain?
@@ -89,6 +102,10 @@ export default class Adventure {
 
     }
 
+    getTakeables() {
+
+    }
+
     getTalkables() {
 
     }
@@ -96,10 +113,9 @@ export default class Adventure {
     //responses
 
     showInventory(input) {
-      const inventoryString = this.inventory.join('\n');
+      const inventoryString = this.inventory.join(', ');
       let output = "Your inventory:" + inventoryString;
-      this.setDescription(inventoryString);
-
+      this.setExplanation(output);
     }
 
     check(input) {
@@ -114,6 +130,28 @@ export default class Adventure {
       } else {
         this.setExplanation(checkResult);
       }
+    }
+
+    displayLog() {
+      const output = this.outputLog();
+      this.setDescription(output);
+      this.setExplanation(`This is a log of everything that's happened thus far.`);
+      return true;
+    }
+
+    respondToNonsense() {
+      const rand = Math.random();
+      const nonsenseArr = [
+        "What?",
+        "Invalid command.",
+        "I don't know what that means.",
+        "Sorry, I don't understand.",
+        "This is nonsense, and I won't respond to it."
+      ];
+
+      const index = Math.floor(nonsenseArr.length * rand);
+
+      this.setExplanation(nonsenseArr[index]);
     }
 
     //basic getters
@@ -148,9 +186,15 @@ export default class Adventure {
       return new GameState({
         adventure : this,
         state : {
-          location : locations(this).get('Bedroom')
+          location : this.locations.get('bedroom')
         }
       })
+    }
+
+    getInitialListeners() {
+      return [
+        makeListener(['log', 'display log', 'show log', 'how did i get here'], this.displayLog, this)
+      ];
     }
 
     getInitialExplanation() {
@@ -161,9 +205,6 @@ export default class Adventure {
       return "You are in a bedroom."
     }
 
-    //basic setters
-
-
     //log stuff
 
     addToLog(input) {
@@ -171,7 +212,9 @@ export default class Adventure {
     }
 
     outputLog() {
-      return this.log.join('\n');
+      return this.log.join(`
+
+      `);
     }
 
     //event handlers
@@ -185,27 +228,17 @@ export default class Adventure {
     }
 
     //dom stuff
-    setExplanation(content) {
+    setExplanation(content = "") {
       setExplanation(content);
-      this.addToLog(content);
+      if (content) {
+        this.addToLog(content);
+      }
     }
 
-    setDescription(content) {
+    setDescription(content = "") {
       setDescription(content);
-      this.addToLog(content);
-    }
-
-    respondToNonsense() {
-      const rand = Math.random();
-      const nonsenseArr = [
-        "What?",
-        "Invalid command",
-        "I don't know what that means",
-        "Sorry, I don't understand"
-      ];
-
-      const index = Math.floor(nonsenseArr.length * rand);
-
-      this.setExplanation(nonsenseArr[index]);
+      if (content) {
+        this.addToLog(content);
+      }
     }
 }

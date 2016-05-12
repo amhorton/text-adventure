@@ -9,13 +9,19 @@ body {
   height: 400px;
   margin: 0 auto;
   padding-top: 40px;
-  font-size: 30px;
-  overflow: hidden;
+  font-size: 25px;
+  overflow-y: scroll;
+}
+
+.divider {
+  width: 400px;
+  margin: 40px auto;
 }
 
 .explanation-container {
   margin-top: 50px;
   font-size: 20px;
+  overflow-x: scroll;
 }
 
 .player-input {
@@ -27,13 +33,9 @@ body {
   font-family: inherit;
   color: inherit;
   background: none;
-  border: none;
+  border: 2px solid #ddd;
 }
 
 .player-input:focus {
   outline: none;
-}
-
-.player-input:before {
-  content: ">"
 }
